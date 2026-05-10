@@ -25,9 +25,26 @@ public class UserController {
         return ResponseEntity.ok(userService.findAll());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.findById(id));
+    }
+
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request) {
         UserResponse created = userService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> update(@PathVariable Long id,
+                                               @Valid @RequestBody UserRequest request) {
+        return ResponseEntity.ok(userService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

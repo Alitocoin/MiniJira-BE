@@ -25,9 +25,26 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.findAll());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ProjectResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(projectService.findById(id));
+    }
+
     @PostMapping
     public ResponseEntity<ProjectResponse> create(@Valid @RequestBody ProjectRequest request) {
         ProjectResponse created = projectService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProjectResponse> update(@PathVariable Long id,
+                                                   @Valid @RequestBody ProjectRequest request) {
+        return ResponseEntity.ok(projectService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        projectService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
