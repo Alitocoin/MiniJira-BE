@@ -1,0 +1,74 @@
+name: CI Backend
+
+on:
+  push:
+    branches:
+      - test-05-cicd_v01
+  pull_request:
+    branches:
+      - test-05-cicd_v01
+
+jobs:
+  build-and-test:
+    name: Build, Test y Security — MiniJira BE
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout del código
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # 2. Setup Java 17 (Temurin)
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Cache de Maven ~/.m2
+      - name: Cache dependencias Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # 4. Tests unitarios (falla el pipeline si falla)
+      - name: Tests unitarios (mvn clean test)
+        run: mvn clean test --no-transfer-progress
+
+      # 5. Verificación integrada (falla el pipeline si falla)
+      - name: Verificación (mvn verify)
+        run: mvn verify --no-transfer-progress
+
+      # 6. OWASP Dependency Check — falla si CVSS >= 7
+      - name: OWASP Dependency Check
+        run: |
+          mvn org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=7 \
+            -DsuppressionFile="" \
+            --no-transfer-progress
+
+      # Subir reporte OWASP como artefacto para revisión
+      - name: Subir reporte OWASP
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-dependency-check-report
+          path: target/dependency-check-report.html
+          retention-days: 7
+
+      # Resumen del resultado
+      - name: Resumen del pipeline
+        if: always()
+        run: |
+          echo "======================================"
+          echo "  RESUMEN CI BACKEND — MiniJira BE   "
+          echo "======================================"
+          echo "Java            : 17 (Temurin)"
+          echo "Tests           : mvn clean test"
+          echo "Verify          : mvn verify"
+          echo "OWASP check     : failBuildOnCVSS=7"
+          echo "Reporte OWASP   : target/dependency-check-report.html"
+          echo "======================================"
