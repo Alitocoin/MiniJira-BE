@@ -5,10 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class UserRequest {
-
-    @NotBlank(message = "El nombre es obligatorio")
-    private String name;
+public class AuthRequest {
 
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "Formato de email inválido")
