@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
@@ -38,6 +40,7 @@ public class DataInitializer implements CommandLineRunner {
         User user = userRepository.save(User.builder()
                 .name("Ana Lopez")
                 .email("ana.lopez@minijira.com")
+                .password(passwordEncoder.encode("password123"))
                 .build());
 
         // Proyecto inicial
