@@ -1,0 +1,106 @@
+name: CI — MiniJira Backend
+
+on:
+  push:
+    branches:
+      - main
+      - development
+      - feat/test-05-cicd
+  pull_request:
+    branches:
+      - main
+      - development
+      - feat/test-05-cicd
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1: Compilación y pruebas unitarias
+  # ─────────────────────────────────────────────
+  build-and-test:
+    name: Build & Test (Java 17)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilar el proyecto
+        run: mvn compile --batch-mode --no-transfer-progress
+
+      - name: Ejecutar pruebas unitarias
+        run: mvn test --batch-mode --no-transfer-progress
+
+      - name: Publicar reporte de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────
+  # Job 2: Análisis estático de código
+  # ─────────────────────────────────────────────
+  lint:
+    name: Lint (Checkstyle)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Verificar estilo de código con Checkstyle
+        run: mvn checkstyle:check --batch-mode --no-transfer-progress
+
+  # ─────────────────────────────────────────────
+  # Job 3: Análisis de vulnerabilidades en dependencias
+  # ─────────────────────────────────────────────
+  security:
+    name: Security (OWASP Dependency Check)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'MiniJira-BE'
+          path: '.'
+          format: 'HTML'
+          out: 'reports/dependency-check'
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+
+      - name: Publicar reporte de seguridad
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports/dependency-check/
+          retention-days: 14
